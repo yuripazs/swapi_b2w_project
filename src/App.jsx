@@ -1,6 +1,7 @@
-import { Body, CardContainer, RandomButton } from './App.styled';
+import { Body, CardContainer, IntroductionDiv, RandomButton } from './App.styled';
 import swapiPlanetClient from './swapiPlanetClient';
 import { BsPeopleFill, BsFillCloudsFill, BsChevronBarDown, BsImageAlt } from 'react-icons/bs';
+import { RiSpaceShipLine } from 'react-icons/ri';
 import { useState } from 'react';
 import { LoaderCard } from './components/Loader';
 
@@ -8,41 +9,49 @@ function App() {
   const [currentPlanet, setCurrentPlanet] = useState('');
   const [visitedPlanets, setVisitedPlanets] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [visitedAllPlanets, setVisitedAllPlanets] = useState(false);
 
   const travelToANewPlanet = async () => {
-    // Criar um numero randômico
-    const randomNumber = Math.ceil(Math.random() * 60);
-    // Fazer a requisição da api com o numero do planeta
-    const newPlanet = await swapiPlanetClient(randomNumber);
+    setLoading(true);
 
-    // Se o novo planeta já estiver incluso no array de planeta visitados, rodar novamente a função travelToANewPlanet como uma forma de receber apenas planetas que não foram ainda visitados (função recursiva)
-    if (visitedPlanets.includes(newPlanet.url)) return travelToANewPlanet();
+    if (visitedPlanets.length < 4) {
+      const randomNumber = Math.ceil(Math.random() * 4);
+      const newPlanet = await swapiPlanetClient(randomNumber);
 
-    // Passando por essa etapa, aqui vamos mudar o estado do planeta atual (currentPlanet) e também alterar o estado dos tipo de terreno do planeta (currentPlanetTerrains) e por ultimo adicionar o planeta atual na lista de planetas visitados.
-    setCurrentPlanet(newPlanet);
-    //
-    //
-    setVisitedPlanets([...visitedPlanets, newPlanet.url]);
-    //
-    setLoading(false);
+      if (visitedPlanets.includes(newPlanet.url)) return travelToANewPlanet();
+
+      setCurrentPlanet(newPlanet);
+      setVisitedPlanets([...visitedPlanets, newPlanet.url]);
+
+      setTimeout(() => {
+        setLoading(false);
+      }, 0);
+      return;
+    }
+
+    setVisitedAllPlanets(true);
+    setTimeout(() => {
+      setLoading(false);
+    }, 0);
   };
 
-  const handleSubmit = () => {
-    // Nessa linha alterei o estado do planeta atual
-    setLoading(true);
-    // Ajustar depois
-    // if (visitedPlanets.length >= 60) return;
+  const restartTrip = () => {
+    setVisitedAllPlanets(false);
+    // setLoading(true);
 
-    setTimeout(() => {
-      travelToANewPlanet();
-    }, 1200);
+    setVisitedPlanets(visitedPlanets.slice(-1));
+
+    travelToANewPlanet();
+
+    // setTimeout(() => {
+    //   setLoading(false);
+    // }, 5000);
   };
 
   const handlePopulationIntl = (planetPopulation) => {
     if (planetPopulation === 'unknown') return planetPopulation;
-
-    const novoFormato = parseInt(planetPopulation);
-    return new Intl.NumberFormat().format(novoFormato).replace(/,/g, '.');
+    const newFormat = parseInt(planetPopulation);
+    return new Intl.NumberFormat().format(newFormat).replace(/,/g, '.');
   };
 
   return (
@@ -54,69 +63,92 @@ function App() {
           {loading ? (
             <LoaderCard />
           ) : (
-            <RandomButton onClick={handleSubmit}>Começar a jornada !!!!</RandomButton>
+            <IntroductionDiv>
+              <h1>Bem-Vindo </h1>
+              <h2>
+                Você está prestes a iniciar uma viagem pela galaxia Star Wars. <br /> Para conhecer
+                um pouco mais de informações sobre os planetas desse universo clique em "Iniciar
+                jornada"
+              </h2>
+              <RandomButton onClick={travelToANewPlanet}>INICIAR JORNADA</RandomButton>
+            </IntroductionDiv>
           )}
         </>
       ) : (
+        ''
+      )}
+
+      {currentPlanet && (
         <>
           {loading ? (
             <LoaderCard />
           ) : (
-            <CardContainer>
-              <h1> {currentPlanet.name} </h1>
-              <p className='title'>
-                <i>
-                  <BsPeopleFill />
-                </i>
-                População
-              </p>
-              <div className='info-div'>
-                <p className='info-spam'> {handlePopulationIntl(currentPlanet.population)} </p>
-              </div>
-              <p className='title'>
-                <i>
-                  <BsChevronBarDown />
-                </i>
-                Gravidade
-              </p>
-              <div className='info-div'>
-                <p className='info-spam'> {currentPlanet.gravity} </p>
-              </div>
-              <p className='title'>
-                <i>
-                  <BsFillCloudsFill />
-                </i>
-                Clima
-              </p>
-              <div className='info-div'>
-                {/* // Modificar // */}
-                {currentPlanet &&
-                  currentPlanet.climate.split(', ').map((climate, i) => (
-                    <p className='info-spam map' key={i + 1}>
-                      {climate.charAt(0).toUpperCase() + climate.slice(1)}
+            <>
+              {!visitedAllPlanets ? (
+                <>
+                  <CardContainer>
+                    <h1> {currentPlanet.name} </h1>
+                    <p className='title'>
+                      <i>
+                        <BsPeopleFill />
+                      </i>
+                      População
                     </p>
-                  ))}
-              </div>
-              <p className='title'>
-                <i>
-                  <BsImageAlt />
-                </i>
-                Terreno
-              </p>
-              <div className='info-div'>
-                <div className='terrains-div'>
-                  {/* // Modificar // */}
-                  {currentPlanet &&
-                    currentPlanet.terrain.split(', ').map((ter, i) => (
-                      <p className='info-spam map' key={i + 1}>
-                        {ter.charAt(0).toUpperCase() + ter.slice(1)}
-                      </p>
-                    ))}
-                </div>
-              </div>
-            </CardContainer>
+                    <div className='info-div'>
+                      <p className='info-spam'>{handlePopulationIntl(currentPlanet.population)}</p>
+                    </div>
+                    <p className='title'>
+                      <i>
+                        <BsChevronBarDown />
+                      </i>
+                      Gravidade
+                    </p>
+                    <div className='info-div'>
+                      <p className='info-spam'> {currentPlanet.gravity} </p>
+                    </div>
+                    <p className='title'>
+                      <i>
+                        <BsFillCloudsFill />
+                      </i>
+                      Clima
+                    </p>
+                    <div className='info-div'>
+                      {currentPlanet &&
+                        currentPlanet.climate.split(', ').map((climate, i) => (
+                          <p className='info-spam map' key={i + 1}>
+                            {climate.charAt(0).toUpperCase() + climate.slice(1)}
+                          </p>
+                        ))}
+                    </div>
+                    <p className='title'>
+                      <i>
+                        <BsImageAlt />
+                      </i>
+                      Terreno
+                    </p>
+                    <div className='info-div'>
+                      {currentPlanet &&
+                        currentPlanet.terrain.split(', ').map((ter, i) => (
+                          <p className='info-spam map' key={i + 1}>
+                            {ter.charAt(0).toUpperCase() + ter.slice(1)}
+                          </p>
+                        ))}
+                    </div>
+                  </CardContainer>
+                  <RandomButton onClick={travelToANewPlanet}>
+                    Visitar um novo planeta
+                    <RiSpaceShipLine style={{ transform: 'rotate(45deg)', marginLeft: '.8rem' }} />
+                  </RandomButton>
+                </>
+              ) : (
+                <IntroductionDiv>
+                  <h1>Terminou a viagem </h1>
+                  <h2>Você</h2>
+                  <RandomButton onClick={restartTrip}>RECOMECAR JORNADA JORNADA</RandomButton>
+                </IntroductionDiv>
+              )}
+            </>
           )}
-          <RandomButton onClick={handleSubmit}>Viajar para um novo planeta</RandomButton>
         </>
       )}
     </Body>
