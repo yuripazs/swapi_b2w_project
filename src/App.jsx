@@ -1,9 +1,10 @@
-import { Body, CardContainer, IntroductionDiv, RandomButton } from './App.styled';
+import { Body, IntroductionDiv } from './App.styled';
 import swapiPlanetClient from './swapiPlanetClient';
-import { BsPeopleFill, BsFillCloudsFill, BsChevronBarDown, BsImageAlt } from 'react-icons/bs';
-import { RiSpaceShipLine } from 'react-icons/ri';
+
 import { useState } from 'react';
 import { LoaderCard } from './components/Loader';
+import CardComponent from './components/CardComponent';
+import NavigateButton from './components/NavigateButton';
 
 function App() {
   const [currentPlanet, setCurrentPlanet] = useState('');
@@ -22,62 +23,64 @@ function App() {
 
       setCurrentPlanet(newPlanet);
       setVisitedPlanets([...visitedPlanets, newPlanet.url]);
-
       setTimeout(() => {
         setLoading(false);
-      }, 0);
+      }, 2000);
       return;
     }
 
-    setVisitedAllPlanets(true);
     setTimeout(() => {
       setLoading(false);
-    }, 0);
+    }, 2000);
+    setVisitedAllPlanets(true);
   };
 
   const restartTrip = () => {
     setVisitedAllPlanets(false);
-    // setLoading(true);
+    setLoading(true);
 
-    setVisitedPlanets(visitedPlanets.slice(-1));
+    setVisitedPlanets(visitedPlanets.slice(-1), travelToANewPlanet);
 
-    travelToANewPlanet();
-
-    // setTimeout(() => {
-    //   setLoading(false);
-    // }, 5000);
-  };
-
-  const handlePopulationIntl = (planetPopulation) => {
-    if (planetPopulation === 'unknown') return planetPopulation;
-    const newFormat = parseInt(planetPopulation);
-    return new Intl.NumberFormat().format(newFormat).replace(/,/g, '.');
+    setTimeout(() => {
+      setLoading(false);
+    }, 2000);
   };
 
   return (
     <Body>
       <div className='bg-image-container'></div>
 
-      {!currentPlanet ? (
+      {loading ? (
+        <LoaderCard />
+      ) : !currentPlanet ? (
+        <IntroductionDiv>
+          <h1>Bem-Vindo </h1>
+          <h2>
+            Você está prestes a iniciar uma viagem pela galaxia Star Wars. <br /> Para conhecer um
+            pouco mais de informações sobre os planetas desse universo clique em "Iniciar jornada"
+          </h2>
+          <NavigateButton onClick={travelToANewPlanet}>INICIAR JORNADA</NavigateButton>
+        </IntroductionDiv>
+      ) : (
         <>
-          {loading ? (
-            <LoaderCard />
+          {!visitedAllPlanets ? (
+            <>
+              <CardComponent currentPlanet={currentPlanet} />
+              <NavigateButton onClick={travelToANewPlanet}>
+                Viajar para um novo planeta
+              </NavigateButton>
+            </>
           ) : (
             <IntroductionDiv>
-              <h1>Bem-Vindo </h1>
-              <h2>
-                Você está prestes a iniciar uma viagem pela galaxia Star Wars. <br /> Para conhecer
-                um pouco mais de informações sobre os planetas desse universo clique em "Iniciar
-                jornada"
-              </h2>
-              <RandomButton onClick={travelToANewPlanet}>INICIAR JORNADA</RandomButton>
+              <h1>Terminou a viagem </h1>
+              <h2>Você</h2>
+              <NavigateButton onClick={restartTrip}>RECOMEÇAR JORNADA </NavigateButton>
             </IntroductionDiv>
           )}
         </>
-      ) : (
-        ''
       )}
 
+      {/* 
       {currentPlanet && (
         <>
           {loading ? (
@@ -144,13 +147,13 @@ function App() {
                 <IntroductionDiv>
                   <h1>Terminou a viagem </h1>
                   <h2>Você</h2>
-                  <RandomButton onClick={restartTrip}>RECOMECAR JORNADA JORNADA</RandomButton>
+                  <RandomButton onClick={restartTrip}>RECOMEÇAR JORNADA JORNADA</RandomButton>
                 </IntroductionDiv>
               )}
             </>
           )}
         </>
-      )}
+      )} */}
     </Body>
   );
 }
